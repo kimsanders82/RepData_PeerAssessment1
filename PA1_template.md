@@ -1,15 +1,8 @@
----
-title: "Reproducible Research - Course Project 1"
-author: "kimsanders82"
-date: "June 11, 2017"
-output: 
-    html_document:
-        keep_md: true
----
+# Reproducible Research - Course Project 1
+kimsanders82  
+June 11, 2017  
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-```
+
 
 # Assignment  
 
@@ -25,7 +18,8 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 ## Load applicable libraries needed for analysis
 
-```{r libraryChunk}
+
+```r
 library(lubridate)
 library(dplyr)
 library(lattice)
@@ -33,7 +27,8 @@ library(lattice)
 
 ## Set the working directory
 
-```{r wd}
+
+```r
 setwd("C:/Coursera")
 ```
 
@@ -41,7 +36,8 @@ setwd("C:/Coursera")
 
 ## Load the data
 
-```{r loadData}
+
+```r
 if (!file.exists("activity.csv")) {
     unzip("activity.zip")
 }
@@ -49,11 +45,33 @@ activity <- read.csv("activity.csv")
 str(activity)
 ```
 
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : Factor w/ 61 levels "2012-10-01","2012-10-02",..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
+
 ## Process/transform the data (if necessary) into a format suitable for your analysis
 
-```{r preProcess}
+
+```r
 activity$date <- as.Date(activity$date)
 summary(activity)
+```
+
+```
+##      steps             date               interval     
+##  Min.   :  0.00   Min.   :2012-10-01   Min.   :   0.0  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16   1st Qu.: 588.8  
+##  Median :  0.00   Median :2012-10-31   Median :1177.5  
+##  Mean   : 37.38   Mean   :2012-10-31   Mean   :1177.5  
+##  3rd Qu.: 12.00   3rd Qu.:2012-11-15   3rd Qu.:1766.2  
+##  Max.   :806.00   Max.   :2012-11-30   Max.   :2355.0  
+##  NA's   :2304
+```
+
+```r
 tidyData <- activity[complete.cases(activity), ]
 ```
 
@@ -63,7 +81,8 @@ tidyData <- activity[complete.cases(activity), ]
 
 ## Make a histogram of the total number of steps taken each day
 
-```{r stepsHistogram}
+
+```r
 q1Data <- tidyData %>%
   group_by(date) %>%
   summarize(totalSteps = sum(steps))
@@ -71,21 +90,25 @@ q1Data <- tidyData %>%
 hist(q1Data$totalSteps, xlab = "Total # of Steps", main = "Histogram of Total Steps (n/a Removed)", col = "lightblue")  
 ```
 
+![](PA1_template_files/figure-html/stepsHistogram-1.png)<!-- -->
+
 ## Calculate and report the mean and median total number of steps taken per day
 
-```{r meanMedian}
+
+```r
 options(scipen = 2)
 q2Data <- q1Data %>% 
   summarize(meanSteps = mean(totalSteps), medianSteps = median(totalSteps))
 ```
 
-### The mean number of steps is `r q2Data$meanSteps` and the median number of steps is `r q2Data$medianSteps`.
+### The mean number of steps is 10766.1886792 and the median number of steps is 10765.
 
 # What is the average daily activity pattern?
 
 ## Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-```{r averageDaily}
+
+```r
 timeSeriesData <- tidyData %>%
            group_by(interval) %>%
            summarise(stepsMean=mean(steps))
@@ -93,14 +116,17 @@ with(timeSeriesData, plot(interval, stepsMean, type="l", col="blue", main="Avera
                     xlab="5 min Interval", ylab="Average # of Steps"))
 ```
 
+![](PA1_template_files/figure-html/averageDaily-1.png)<!-- -->
+
 ## Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-```{r maxIntervalSteps}
+
+```r
 maxInterval <- max(timeSeriesData$stepsMean)
 maxInterval <- filter(timeSeriesData, stepsMean %in% c(maxInterval))
 ```
 
-### The 5-minute interval `r maxInterval$interval` contains the maximum number of steps (`r maxInterval$stepsMean`)
+### The 5-minute interval 835 contains the maximum number of steps (206.1698113)
 
 # Imputing missing values
 
@@ -108,11 +134,12 @@ maxInterval <- filter(timeSeriesData, stepsMean %in% c(maxInterval))
 
 ## Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
 
-```{r numberNA}
+
+```r
 missingInfo <- nrow(activity) - nrow(tidyData)
 ```
 
-### There are `r missingInfo` rows with missing data.
+### There are 2304 rows with missing data.
 
 ## Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
 
@@ -120,7 +147,8 @@ missingInfo <- nrow(activity) - nrow(tidyData)
 
 ## Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-```{r newData}
+
+```r
 newData<- inner_join(activity, timeSeriesData) %>% # join the mean steps value to each row in activity
           mutate(steps = ifelse(is.na(steps), stepsMean, steps)) %>% # only fill in mean if steps is NA
           select(-stepsMean) # drop excess column used to fill in NA values
@@ -128,7 +156,8 @@ newData<- inner_join(activity, timeSeriesData) %>% # join the mean steps value t
 
 ##Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
-```{r newDataSummary}
+
+```r
 q1NewData <- newData %>%
   group_by(date) %>%
   summarize(totalSteps = sum(steps))
@@ -136,13 +165,16 @@ q1NewData <- newData %>%
 hist(q1NewData$totalSteps, xlab = "Total # of Steps", main = "Histogram of Total Steps", col = "lightblue")  
 ```
 
-```{r meanMedianNewData}
+![](PA1_template_files/figure-html/newDataSummary-1.png)<!-- -->
+
+
+```r
 options(scipen = 2)
 q2NewData <- q1NewData %>% 
   summarize(meanSteps = round(mean(totalSteps),0), medianSteps = median(totalSteps))
 ```
 
-### The mean number of steps is `r q2NewData$meanSteps` and the median number of steps is `r q2NewData$medianSteps`.  
+### The mean number of steps is 10766 and the median number of steps is 10766.1886792.  
 
 ### Imputing values for the NA entries slightly changes the mean and median values. The overall shapes of the histograms are similar. There is not a significant change in the results.
 
@@ -152,14 +184,16 @@ q2NewData <- q1NewData %>%
 
 ## Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
-```{r weekData}
+
+```r
 weekData <- newData %>% 
          mutate(day=as.factor(ifelse(wday(date) %in% c(1,7),"weekend","weekday")))
 ```
 
 ## Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). 
 
-```{r panelPlot}
+
+```r
 panelData <- weekData %>% 
           group_by(day, interval) %>%
           summarise(stepsMean = mean(steps))
@@ -167,6 +201,8 @@ with (panelData,
       xyplot(stepsMean ~ interval|day, type = "l", 
              xlab = "Interval", ylab = "Number of Steps",layout=c(1,2)))
 ```
+
+![](PA1_template_files/figure-html/panelPlot-1.png)<!-- -->
 
 
 
